@@ -1,4 +1,64 @@
-<!DOCTYPE html><html lang="pl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex, nofollow"><title>Twój dostęp</title>
-<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@700;800&family=Rubik:wght@400;500&display=swap" rel="stylesheet">
-<style>html,body{margin:0;background:#F6F3FC;color:#1E1A2E;font-family:'Rubik',system-ui,sans-serif}.wrap{max-width:560px;margin:0 auto;padding:64px 20px;text-align:center}.badge{display:inline-block;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#6B4EE6;background:rgba(107,78,230,.1);padding:6px 12px;border-radius:99px}h1{font-family:'Baloo 2',sans-serif;font-size:28px;line-height:1.2;margin:18px 0 10px}p{font-size:17px;line-height:1.55;color:#5B5470}.card{background:#fff;border:1px solid rgba(107,78,230,.14);border-radius:22px;padding:24px 20px;margin-top:28px}</style></head>
-<body><div class="wrap"><span class="badge">Zakup potwierdzony</span><h1>Superwizja w Kieszeni™</h1><p>Dziękujemy! Kończymy przygotowywać twoje materiały. Ta sama strona zostanie zaktualizowana o wszystkie pliki.</p><div class="card"><p><strong>Zapisz ten link</strong></p><p>To twój dostęp na zawsze. Wróć tu wkrótce, a znajdziesz wszystkie materiały.</p></div></div></body></html>
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Superwizja w Kieszeni™</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Rubik:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* HUB DE ENTREGA: la única URL que recibe el comprador. Sin OTOs, sin contactos, noindex. */
+:root{--bg:#F6F3FC;--paper:#FFFFFF;--ink:#1E1A2E;--ink-soft:#5B5470;--accent:#6B4EE6;--accent-dark:#2A2440;--line:#EFE9FB}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--bg);color:var(--ink)}
+body{font-family:'Rubik',-apple-system,Arial,sans-serif;line-height:1.55;-webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:'Baloo 2',Georgia,serif;line-height:1.15;letter-spacing:-.01em}
+a{color:inherit}
+.wrap{max-width:1040px;margin:0 auto;padding:0 16px}
+.hero{background:linear-gradient(160deg,var(--accent-dark),var(--accent));color:var(--paper);padding:48px 0 64px;text-align:center}
+.hero .kicker{display:inline-block;border:1px solid rgba(255,255,255,.5);border-radius:99px;padding:5px 14px;font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;margin-bottom:14px}
+.hero h1{font-size:clamp(28px,6vw,48px);margin-bottom:10px}
+.hero p{font-size:18px;opacity:.93;max-width:640px;margin:0 auto}
+.stats{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:22px}
+.stats span{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.35);border-radius:99px;padding:8px 16px;font-weight:700;font-size:15px}
+.core{position:relative;margin:-36px auto 36px;background:var(--paper);border:2px solid var(--accent);border-radius:20px;padding:26px;display:grid;grid-template-columns:180px 1fr;gap:24px;align-items:center;box-shadow:0 18px 40px rgba(0,0,0,.10)}
+.core img{width:100%;border-radius:10px;box-shadow:0 8px 20px rgba(0,0,0,.18);display:block}
+.core .ph{aspect-ratio:2/3;border-radius:10px;background:linear-gradient(160deg,var(--accent),var(--accent-dark))}
+.tag{display:inline-block;background:var(--accent);color:var(--paper);border-radius:99px;padding:4px 12px;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px}
+.core h2{font-size:clamp(22px,4vw,32px);margin-bottom:8px}
+.core p{color:var(--ink-soft);margin-bottom:16px}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:50px;padding:12px 26px;border-radius:12px;background:var(--accent);color:var(--paper);font-weight:800;font-size:17px;text-decoration:none;box-shadow:0 4px 0 var(--accent-dark)}
+.btn:hover{filter:brightness(1.05)}
+.sec{margin:0 0 40px}
+.sec h2{font-size:clamp(22px,4vw,30px);margin-bottom:16px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:8px;text-decoration:none;transition:transform .12s,border-color .12s}
+.card:hover{transform:translateY(-2px);border-color:var(--accent)}
+.card .n{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.card h3{font-size:19px}
+.card p{color:var(--ink-soft);font-size:15px;flex:1}
+.card .go{font-weight:800;color:var(--accent-dark)}
+.pasos{counter-reset:p;list-style:none;display:grid;gap:10px}
+.pasos li{counter-increment:p;background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:14px 16px 14px 58px;position:relative}
+.pasos li::before{content:counter(p);position:absolute;left:14px;top:12px;width:32px;height:32px;border-radius:50%;background:var(--accent);color:var(--paper);font-weight:800;display:flex;align-items:center;justify-content:center}
+.foot{text-align:center;color:var(--ink-soft);font-size:13px;padding:10px 0 40px}
+@media (max-width:640px){.core{grid-template-columns:1fr;text-align:center;padding:20px}.core img,.core .ph{max-width:170px;margin:0 auto}.btn{width:100%}}
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="wrap">
+    <span class="kicker">Witaj w zestawie: Superwizja w Kieszeni™</span>
+    <h1>Superwizja w Kieszeni™</h1>
+    <p>Ktoś, kogo możesz zapytać w dwie minuty: asystentka AI zestawu, 40 trudnych przypadków i drabinki trudności.</p>
+    <div class="stats"><span>Asystentka AI 24/7</span><span>40 trudnych przypadków</span><span>130 kart w 4 stopniach</span></div>
+  </div>
+</header>
+<main class="wrap">
+  
+  <section class="sec"><h2>Twoje bonusy</h2><div class="grid"><a class="card" href="../../oto2-asystentka-ai-zestawu/khdfqkrm35/" target="_blank" rel="noopener"><span class="n">Narzędzie</span><h3>Asystentka AI Zestawu</h3><p>Opisz dziecko i sytuację: asystentka podpowie kartę, wariant i co zmienić w następnej sesji.</p><span class="go">Otwórz →</span></a><a class="card" href="../../oto2-40-trudnych-przypadkow/cnrevhmvxn/" target="_blank" rel="noopener"><span class="n">Bonus 1</span><h3>40 trudnych przypadków</h3><p>40 sytuacji z prawdziwych sesji, krok po kroku: co zrobić teraz i na następnej sesji.</p><span class="go">Otwórz →</span></a><a class="card" href="../../oto2-drabinki-trudnosci/tn3p9nynms/" target="_blank" rel="noopener"><span class="n">Bonus 2</span><h3>Drabinki trudności</h3><p>Każda ze 130 kart w 4 stopniach, od pełnego wsparcia do wersji trudniejszej.</p><span class="go">Otwórz →</span></a><a class="card" href="../../oto2-sygnaly-ostrzegawcze/aowf49d1mx/" target="_blank" rel="noopener"><span class="n">Bonus 3</span><h3>Sygnały ostrzegawcze</h3><p>Kiedy skierować dziecko do innego specjalisty i jak powiedzieć o tym rodzicom.</p><span class="go">Otwórz →</span></a><a class="card" href="../../oto2-pierwsza-trudna-sesja/zm6nmtchnq/" target="_blank" rel="noopener"><span class="n">Bonus</span><h3>Pakiet „Pierwsza trudna sesja”</h3><p>Gotowy plan na jedno spotkanie z dzieckiem, które nie współpracuje. Bonus dla pierwszych 100 osób.</p><span class="go">Otwórz →</span></a><a class="card" href="../../oto2-biblioteka-promptow/15rct5ldmx/" target="_blank" rel="noopener"><span class="n">Bonus</span><h3>Biblioteka promptów</h3><p>Bonus niespodzianka: 25 gotowych pytań do asystentki.</p><span class="go">Otwórz →</span></a></div></section>
+  <section class="sec"><h2>Od czego zacząć</h2><ol class="pasos"><li>Otwórz Asystentkę AI Zestawu i opisz dziecko, z którym masz najbliższe zajęcia.</li><li>Jeśli dziecko nie współpracuje, wydrukuj «Pierwszą trudną sesję».</li><li>Przy każdej odmowie sprawdź kartę w «Drabinkach trudności» i zejdź o stopień.</li><li>Gdy coś cię niepokoi, przeczytaj «Sygnały ostrzegawcze».</li></ol></section>
+  <p class="foot">Do użytku osobistego. Zakaz odsprzedaży i rozpowszechniania.</p>
+</main>
+</body>
+</html>
