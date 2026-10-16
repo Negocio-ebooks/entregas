@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,interactive-widget=resizes-content">
+<meta name="robots" content="noindex,nofollow">
+<title>AI Asistent pro Korzetářství · Dokonalé Padnutí Bez Předělávání™</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;500;600;700;800&family=Libre+Baskerville:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F8F3ED;--paper:#FFFFFF;--ink:#1C1817;--ink-soft:#66584F;--accent:#43161C;--accent-dark:#2C1016;--line:#CEBCA8}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--bg);color:var(--ink)}
+body{font-family:'Lato',-apple-system,Arial,sans-serif;line-height:1.5;display:flex;flex-direction:column;-webkit-font-smoothing:antialiased}
+header{background:var(--accent-dark);color:var(--paper);padding:14px 16px;display:flex;align-items:center;gap:12px}
+.av{width:40px;height:40px;border-radius:50%;background:var(--paper);color:var(--accent-dark);display:flex;align-items:center;justify-content:center;font-weight:800;font-family:'Libre Baskerville',Georgia,serif;font-size:18px;flex:none}
+header b{display:block;font-family:'Libre Baskerville',Georgia,serif;font-size:17px}
+header small{opacity:.85}
+#log{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;max-width:760px;width:100%;margin:0 auto}
+.m{max-width:88%;padding:11px 14px;border-radius:16px;white-space:pre-wrap;word-wrap:break-word;font-size:16px}
+.bot{background:var(--paper);border:1px solid var(--line);align-self:flex-start;border-bottom-left-radius:4px}
+.yo{background:var(--accent);color:var(--paper);align-self:flex-end;border-bottom-right-radius:4px}
+.err{background:#fbeaea;border:1px solid #e3b4b4;align-self:flex-start}
+.err button{margin-top:8px;border:0;background:var(--accent-dark);color:var(--paper);border-radius:8px;padding:6px 12px;font:inherit;font-weight:700;cursor:pointer}
+.typing span{display:inline-block;width:7px;height:7px;margin:0 2px;border-radius:50%;background:var(--ink-soft);animation:b 1s infinite}
+.typing span:nth-child(2){animation-delay:.15s}.typing span:nth-child(3){animation-delay:.3s}
+@keyframes b{0%,80%,100%{opacity:.3;transform:translateY(0)}40%{opacity:1;transform:translateY(-3px)}}
+@media (prefers-reduced-motion:reduce){.typing span{animation:none}}
+#chips{display:flex;flex-wrap:wrap;gap:8px;padding:0 16px 10px;max-width:760px;width:100%;margin:0 auto}
+#chips button{border:1px solid var(--accent);background:var(--paper);color:var(--accent-dark);border-radius:99px;padding:8px 14px;font:inherit;font-size:14px;font-weight:700;cursor:pointer;text-align:left}
+form{display:flex;gap:8px;padding:12px 16px calc(12px + env(safe-area-inset-bottom));background:var(--paper);border-top:1px solid var(--line)}
+form .in{display:flex;gap:8px;max-width:760px;width:100%;margin:0 auto}
+textarea{flex:1;min-width:0;resize:none;border:2px solid var(--line);border-radius:14px;padding:11px 13px;font:inherit;font-size:16px;max-height:140px;background:var(--bg);color:var(--ink);outline:none}
+textarea:focus{border-color:var(--accent)}
+form button{border:0;border-radius:14px;background:var(--accent);color:var(--paper);font:inherit;font-weight:800;padding:0 18px;min-height:48px;cursor:pointer}
+form button:disabled{opacity:.5}
+</style>
+</head>
+<body>
+<header><div class="av" id="av">IA</div><div><b id="nom"></b><small id="rol"></small></div></header>
+<div id="log" role="log" aria-live="polite"></div>
+<div id="chips"></div>
+<form id="f"><div class="in"><textarea id="q" rows="1" placeholder=""></textarea><button id="send" type="submit"></button></div></form>
+<script>
+/* =====================================================================
+   CONFIG DEL CHAT. Regla dura: acá NUNCA va una API key (ni entera, ni
+   partida, ni ofuscada). El chat le habla a TU proxy, que tiene la key
+   guardada como secreto del lado del servidor.
+   ===================================================================== */
+const CHAT = {
+  proxyUrl: "https://sudhpvglklhwsblzrege.supabase.co/functions/v1/ai-proxy",            // ej: https://<tu-proyecto>.supabase.co/functions/v1/ai-proxy
+  modelo: "gemini-3.5-flash-lite",                 // el más barato que esté en la allowlist del proxy
+  nombre: "AI Asistent pro Korzetářství",
+  rol: "Autorské Korzetářství ·  Dokonalé Padnutí Bez Předělávání™",
+  bienvenida: "Ahoj! Napiš mi, jaký kus zkoušíš a co vidíš (kde přebývá, kde tlačí, kde se krabatí). Poradím ti, co změnit na střihu a v jakém pořadí.",
+  placeholder: "Popiš mi, co se děje při zkoušce…",
+  enviar: "Odeslat",
+  errorTxt: "Teď jsem nemohl odpovědět. Zkus to znovu za pár sekund.",
+  reintentar: "Zkusit znovu",
+  sugerencias: [
+    "Je to moje první zkouška korzetu: proveď mě krok za krokem",
+    "Korzet nahoře odstává a ve výstřihu je vzduch",
+    "Záda se zavírají do V, dole víc otevřená",
+    "Jak upravím střih na míry své zákaznice?"
+  ],
+  maxHistorial: 12,
+  // CONOCIMIENTO: resumen del core y de cada bono. Si el core tiene ítems
+  // numerados, pegá el CATÁLOGO COMPLETO numerado (generado desde contenido.py),
+  // nunca ejemplos sueltos: si no, el modelo inventa números.
+  sistema: `Jsi AI Asistent pro Korzetářství: pomáháš švadlenám, které si koupily „Autorské Korzetářství“ (střihy v PDF na korzety, podprsenky, bralette, body a kalhotky), řešit problémy s padnutím a upravovat střihy na míry jejich zákaznic.
+Pravidla:
+- Odpovídej jen na témata korzetářství, prádla, střihů, měr, zkoušek a šití. Když se zeptá na něco jiného, vlídně ji vrať k šití.
+- Odpovědi krátké a praktické, s číslovanými kroky. Pokud chybí důležitý údaj (jaký kus, co vidí a kde, míry zákaznice a střihu), polož jedinou otázku.
+- Když problém odpovídá jednomu ze 40 PROBLÉMŮ S PADNUTÍM, pojmenuj ho přesným číslem (např. „problém 9 · Záhyb v pase na boku“). Nikdy si nevymýšlej čísla, stránky ani názvy střihů, které nejsou níže.
+- Když počítáš (rozdělení rozdílu do švů), ukaž výpočet. Pracuj s polovinou těla. Pokud míry nemáš, vysvětli, jak počítat.
+- Opravuj v pořadí: délka, obvod, tvar. Vždy doporuč vyzkoušet na zkušebním modelu před finální látkou.
+- Korzet má být přiléhavý a pohodlný: nedoporučuj extrémní zúžení pasu ani nošení kvůli ztrátě centimetrů. Není to kus na nošení v těhotenství. Pokud má zákaznice bolesti, zdravotní potíže nebo potíže s dýcháním, ať se poradí s lékařem.
+- Výpočty piš jednoduchým textem (např. 9 cm − 4,5 cm = 4,5 cm). Nikdy nepoužívej LaTeX, znaky $ ani vzorce s lomítky.
+- Pozdrav jen v první odpovědi; potom jdi rovnou k věci.
+- Nedávej kontakty, adresy ani odkazy.
+- Piš česky, tykej osobě, která ti píše, a oslovuj ji v ženském rodě (je to švadlena), vlídně a konkrétně. Slovník: zkušební model, kostice, průchodky, busk, kalhotky, podprsenka, krejčovský metr, střih. Míry v centimetrech. Žádné nadpisy v Markdownu.
+
+KATALOG A MATERIÁLY:
+40 PROBLÉMŮ S PADNUTÍM (číslo · problém · co je vidět · pravděpodobná příčina · oprava):
+[Korzet · horní část]
+1 · Výstřih odstává od těla · Mezi horním okrajem a prsy je vzduch · Příčina: Obvod přes prsa na střihu je větší než u zákaznice, nebo je horní okraj příliš vysoko · Oprava: Přebytek na zkušebním modelu sepni a označ; tuto hodnotu uber rozdělenou do předních a bočních švů, jen v linii prsou, a křivku k pasu změkči.
+2 · Nahoře mačká prsa („efekt přetékání“) · Prsa vystupují nad okraj · Příčina: Chybí obvod přes prsa, nebo jsou košíčky na střihu na její prsa malé · Oprava: Rozpárej šev prsních dílů a přidej, co chybí, rozdělené mezi přední díly; pokud je výstřih na její prsa moc nízko, zvedni horní okraj.
+3 · Pod prsy se dělá vodorovný záhyb · Záhyb z jedné strany na druhou pod prsy · Příčina: Přední délka do pasu je větší než u zákaznice, nebo je obvod pod prsy moc volný · Oprava: Přebytek na zkušebním modelu označ a střih zkrať v linii pod prsy, nebo uber obvod pod prsy v předních švech.
+4 · Košíčky odstávají nebo se v nich dělá dolík · Látka nedosedá na prsa · Příčina: Objem košíčku je větší než objem prsou zákaznice · Oprava: Zmenši křivku prsního švu (uber objem ve vrcholu křivky) a znovu vyzkoušej; obvod neubírej.
+5 · Horní okraj se zařezává pod paží · Překáží, když spustí paže · Příčina: Bok je příliš vysoko · Oprava: Horní okraj na boku postupně sniž o 1 až 2 cm a křivku napoj na přední a zadní díl.
+6 · Vypadá ploše a nevytvaruje prsa · Přední díl zůstává rovný · Příčina: Střih má rovnou siluetu, nebo má zákaznice větší prsa než základní střih · Oprava: Přidej křivku do švů prsních dílů, nebo zvol střih s větším objemem.
+7 · Busk se ohýbá nebo nahoře odstává · Přední zapínání nedosedá rovně · Příčina: Velké napětí přes prsa, nebo je busk delší než rovná část trupu · Oprava: Zkontroluj obvod přes prsa; pokud problém trvá, zvol kratší nebo zahnutý busk.
+8 · Vykukují ramínka podprsenky nebo to nejde dohromady s prádlem · Neladí to s tím, co má pod tím · Příčina: Zkouška proběhla bez prádla, které bude nosit · Oprava: Zopakuj zkoušku s finálním prádlem, nebo přidej ramínka přímo na korzet.
+[Korzet · pas a boky]
+9 · Záhyb v pase na boku · Šikmé záhyby ve výšce pasu · Příčina: Linie pasu na střihu neodpovídá jejímu skutečnému pasu · Oprava: Skutečný pas označ na zkušebním modelu stuhou a linii pasu na střihu posuň nahoru nebo dolů na všech dílech.
+10 · V pase moc stahuje · Bolí nebo zanechává otlaky · Příčina: Zúžení pasu je větší, než zákaznice snese · Oprava: Přidej šíři v pase, rozdělenou do všech švů; korzet určený k pohodlnému nošení velké zúžení nepotřebuje.
+11 · Při sezení se zařezává do boků · Vadí vsedě · Příčina: Délka pod pasem je větší než její vzdálenost pas–stehno vsedě · Oprava: Zkrať spodní okraj vpředu a na boku, nebo ho vpředu víc vykroj nahoru.
+12 · Na bocích odstává · Na bocích je vzduch · Příčina: Obvod boků na střihu je větší než její · Oprava: Přebytek uber v bočních a zadních švech, jen v oblasti boků, pas zachovej.
+13 · Na bocích tlačí a vyjíždí nahoru · Korzet při pohybu vyjíždí nahoru · Příčina: Chybí obvod boků, takže ho tělo tlačí nahoru · Oprava: Přidej šíři na bocích, rozdělenou do bočních a zadních švů.
+14 · Stáčí se na jednu stranu · Švy jdou šikmo · Příčina: Díly ustřižené mimo osnovu, nebo asymetrické tělo · Oprava: Zkontroluj osnovu každého dílu; pokud je tělo asymetrické, uprav jen stranu, která to potřebuje.
+15 · Kostice se otlačují nebo vylézají z tunýlku · Je vidět konec kostice · Příčina: Kostice delší než tunýlek, nebo špatně uzavřený tunýlek · Oprava: Kostici zkrať o 1 cm oproti tunýlku a konce ochraň; tunýlek dobře uzavři ještě před lemováním.
+16 · Látka se mezi kosticemi vlní · Na vrchní látce jsou vlny · Příčina: Vrchní látka bez pevné vrstvy, nebo špatně spojená s korzetovým keprem · Oprava: Vrchní látku spoj s korzetovým keprem (nebo ji vyztuž) ještě před sešitím dílů.
+[Korzet · záda a zapínání]
+17 · Záda se nezavírají rovnoměrně (nahoře nebo dole víc otevřená) · Mezera šněrování dělá V · Příčina: Tam, kde je mezera nejširší, chybí korzetu pro tohle tělo šíře · Oprava: Kde se moc otvírá, chybí obvod: když se víc otvírá dole, přidej na boky (boční a zadní švy); když nahoře, přidej přes prsa nebo do horní části zad. Výpočet: mezera navíc (třeba 9 − 4,5 = 4,5 cm) ÷ 2 = kolik přidáš ke každé polovině střihu, rozdělené mezi její švy. Ideální je rovnoměrná mezera 4 až 5 cm.
+18 · Záda se zavřou úplně, bez mezery · Oba okraje se dotýkají · Příčina: Korzet je moc velký · Oprava: Uber v bočních a zadních švech, aby zůstala rovnoměrná mezera kolem 5 cm a dalo se doladit.
+19 · Záhyb v dolní části zad · Vodorovné záhyby nad hýžděmi · Příčina: Zadní délka je větší než její, nebo výrazné prohnutí v kříži · Oprava: Zkrať v linii zadního pasu, nebo přidej křivku do zadního švu.
+20 · Lopatky se otlačují nebo se nahoře zařezává · Vadí, když hýbe pažemi · Příčina: Zadní horní okraj příliš vysoko nebo příliš těsný · Oprava: Zadní okraj sniž o 1 až 2 cm, nebo přidej trochu šíře do horní části zad.
+21 · Šňůra klouže a povoluje · Je potřeba ji často utahovat · Příčina: Kluzká šňůra nebo průchodky moc daleko od sebe · Oprava: Použij plochou šňůru z bavlny nebo pevného saténu a průchodky ve vzdálenosti 2 až 2,5 cm.
+22 · Průchodky se vytrhávají · Látka kolem se trhá · Příčina: Podél průchodek chybí výztuž nebo kostice · Oprava: Dej kostici na každou stranu linie průchodek a pevnou výztuž.
+[Podprsenky a bralette]
+23 · Ramínko padá z ramene · Při pohybu sjíždí · Příčina: Ramínko je na její rameno příliš vně · Oprava: Posuň ho o 1 až 2 cm ke středu, vzadu i vpředu.
+24 · Kostice se zařezává pod paží · Vadí na boku · Příčina: Kostice delší nebo širší než základ prsu · Oprava: Použij kostici o velikost menší, nebo kratší na boku.
+25 · Střed nedosedá na hrudní kost · Můstek odstává · Příčina: Košíčky moc malé nebo kostice moc úzká · Oprava: Zvětši košíček nebo použij širší kostici.
+26 · Obvodový pás vzadu vyjíždí · Záda jdou nahoru · Příčina: Pás je moc volný; váhu nesou ramínka · Oprava: Pás utáhni; má být pevný a vodorovný.
+27 · Prsa přetékají nahoře nebo na boku košíčku · Prsa vystupují ven · Příčina: Košíček je malý · Oprava: Zvětši košíček ve spojovacím švu, nebo přejdi na další velikost košíčku.
+28 · Záhyb v košíčku · Látka se krabatí · Příčina: Košíček je velký · Oprava: Uber objem ve švu košíčku, nebo přejdi na předchozí velikost košíčku.
+[Body a kalhotky]
+29 · Body táhne od ramene do rozkroku · Táhne, když se protáhne nebo sedne · Příčina: Délka trupu na střihu je menší než její · Oprava: Prodluž střih v linii pasu: co chybí, polovinu na přední díl a polovinu na zadní.
+30 · Body dělá v pase kapsu · Vpředu je moc látky · Příčina: Délka trupu je moc velká · Oprava: Zkrať v linii pasu.
+31 · Kalhotky se vzadu zařezávají · Sjíždějí dovnitř · Příčina: Na zadním dílu chybí látka pro její hýždě · Oprava: Přidej krytí na zadním dílu, hlavně směrem ke středu.
+32 · Kalhotky se zařezávají u nohy · Pruženka se zařezává do kůže · Příčina: Pruženka moc napnutá nebo malý otvor pro nohu · Oprava: Sniž napětí pruženky u nohou, nebo zvětši otvor.
+33 · Pas kalhotek sjíždí nebo se roluje · Pruženka se přehýbá · Příčina: Pruženka moc volná nebo moc úzká · Oprava: Použij pevnější nebo širší pruženku a při našívání hlídej napětí.
+34 · Rozkrok táhne vpředu nebo vzadu · Vadí v rozkroku · Příčina: Délka rozkroku je na její tělo špatně rozdělená · Oprava: Prodluž nebo zkrať rozkrokový díl na straně, která táhne.
+[Všechny kusy]
+35 · Zkušební model seděl, finální kus ne · Co sedělo, už nesedí · Příčina: Finální látka se nechová jako látka zkušebního modelu · Oprava: Ušij zkušební model z látky s podobným chováním, nebo finální látku vyztuž.
+36 · Ve stoje sedí, vsedě ne · Vadí vsedě · Příčina: Zkouška proběhla jen ve stoje · Oprava: Při každé zkoušce ji popros, ať si sedne, zvedne paže a předkloní se.
+37 · Stejný střih jedné zákaznici sedí a druhé ne · Každé tělo je jiné · Příčina: Střih je dělaný na základní míry · Oprava: Před stříháním zkušebního modelu vždy uprav střih na míry konkrétní zákaznice.
+38 · Opravy nemají konce · Při každé zkoušce se objeví nový problém · Příčina: Opravuje se víc věcí najednou a bez pořadí · Oprava: Opravuj v pořadí: nejdřív délka, pak obvod, nakonec tvar (košíčky, křivky). Jednu věc po druhé.
+39 · Sedí jí, ale necítí se v tom dobře · Kus je „povedený“, ale nechce ho nosit · Příčina: Rozdíl mezi tím, co čekala, a tím, co vzniklo · Oprava: Při první domluvě se jí zeptej, k čemu ho bude nosit a jakou oporu má ráda; zapiš to do karty.
+40 · Látka se zkouškami vytahala · Zkušební model je povolený · Příčina: Hodně zkoušek na jednom modelu · Oprava: Po dvou velkých opravách ustřihni nový zkušební model podle opraveného střihu.
+
+14 MĚR (z „Jak Vzít Zákaznici Míry“):
+1. Obvod hrudníku přes prsa: Přes nejširší místo prsou, metr vodorovně a bez utahování.
+2. Obvod pod prsy: Těsně pod prsy, kde sedí obvodový pás podprsenky. Pevně, ale bez utahování.
+3. Obvod pasu: V nejužším místě trupu. Uvaž stuhu a popros ji, ať se pohne: stuha sama sjede do pasu.
+4. Horní obvod boků: Asi 10 cm pod pasem, ve výšce pánevních kostí.
+5. Obvod boků: Přes nejširší místo hýždí, chodidla u sebe.
+6. Přední délka do pasu: Od jamky mezi klíčními kostmi do pasu, středem.
+7. Zadní délka do pasu: Od vystouplého obratle na spodku krku do pasu.
+8. Výška prsou: Od místa, kde se rameno potkává s krkem, k prsnímu bodu.
+9. Vzdálenost prsních bodů: Vzdálenost mezi oběma prsními body.
+10. Od linie pod prsy k pasu: Vpředu, od linie pod prsy do pasu.
+11. Od pasu k bokům (výška): Na boku, od pasu k nejširšímu místu boků.
+12. Šířka zad: Od podpaží k podpaží přes záda, paže volně podél těla.
+13. Od pasu ke stehnu vsedě: Vsedě, vpředu, od pasu k přehybu nohy. Určuje největší délku korzetu.
+14. Délka trupu (na body): Od ramene přes přední stranu a rozkrok zpátky ke stejnému rameni přes záda.
+
+PRŮVODCE ÚPRAVOU STŘIHU: porovnat střih a zákaznici přes prsa, pod prsy, v pase, v horním obvodu boků a v bocích (polovina těla, bez švových záložek); rozdíl rozdělit do všech svislých okrajů švů na polovině střihu, bez posouvání středu předku (busk) a středu zad (průchodky); napojit měkkými křivkami; když je rozdíl nerovnoměrný, víc na boční díly a díly přes boky. Délka: vodorovná čára mezi linií pod prsy a pasem (a mezi pasem a boky), rozstřihnout a oddálit pro prodloužení, přeložit pro zkrácení. Košíček: víc nebo méně křivky v prsních švech bez změny obvodu. Prádlo: obvodový pás podle obvodu pod prsy s pružností látky; body = délka trupu, opravuje se v pase; kalhotky = pruženka a krytí.
+PLÁN PRVNÍ ZKOUŠKY (pořadí): 1 zapínání (rovnoměrná mezera na zádech 4 až 5 cm) · 2 délka (pas na jejím pase, může si sednout) · 3 obvod (sepnout a označit) · 4 tvar (košíčky, křivky, záhyby) · 5 pohyb (sednout, paže, předklon) · 6 pohodlí · 7 fotky. Potom: přenést opravy na střih; po dvou velkých opravách nový zkušební model.
+ZLATÉ PRAVIDLO: vždy zkušební model před finální látkou; opravovat jednu věc po druhé, v pořadí délka → obvod → tvar.`
+};
+/* ===================================================================== */
+
+const log = document.getElementById("log"), q = document.getElementById("q"), send = document.getElementById("send"), chips = document.getElementById("chips");
+document.getElementById("nom").textContent = CHAT.nombre;
+document.getElementById("rol").textContent = CHAT.rol;
+document.getElementById("av").textContent = (CHAT.nombre || "IA").trim().slice(0, 1).toUpperCase();
+q.placeholder = CHAT.placeholder; send.textContent = CHAT.enviar;
+
+let historial = [];
+try { historial = JSON.parse(sessionStorage.getItem("chat-" + location.pathname) || "[]"); } catch (e) {}
+function persistir() { try { sessionStorage.setItem("chat-" + location.pathname, JSON.stringify(historial.slice(-CHAT.maxHistorial))); } catch (e) {} }
+
+function burbuja(txt, cls) { const d = document.createElement("div"); d.className = "m " + cls; d.textContent = txt; log.append(d); log.scrollTop = log.scrollHeight; return d; }
+function limpiar(t) { return t.replace(/\*\*(.+?)\*\*/g, "$1").replace(/^#+\s*/gm, "").replace(/^\s*[-*]\s+/gm, "• "); }
+
+burbuja(CHAT.bienvenida, "bot");
+historial.forEach(h => burbuja(h.parts[0].text, h.role === "user" ? "yo" : "bot"));
+if (!historial.length) CHAT.sugerencias.forEach(s => { const b = document.createElement("button"); b.type = "button"; b.textContent = s; b.onclick = () => preguntar(s); chips.append(b); });
+
+async function preguntar(texto) {
+  texto = (texto || "").trim(); if (!texto) return;
+  chips.innerHTML = "";
+  burbuja(texto, "yo");
+  historial.push({ role: "user", parts: [{ text: texto }] });
+  await responder();
+}
+
+async function responder() {
+  send.disabled = true;
+  const t = document.createElement("div"); t.className = "m bot typing"; t.setAttribute("aria-label", "…"); t.innerHTML = "<span></span><span></span><span></span>"; log.append(t); log.scrollTop = log.scrollHeight;
+  try {
+    const r = await fetch(CHAT.proxyUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: CHAT.modelo,
+        systemInstruction: { parts: [{ text: CHAT.sistema }] },
+        contents: historial.slice(-CHAT.maxHistorial),
+        generationConfig: { temperature: 0.7, maxOutputTokens: 800 }
+      })
+    });
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    const d = await r.json();
+    const txt = (d.candidates?.[0]?.content?.parts || []).map(p => p.text || "").join("").trim();
+    if (!txt) throw new Error("vacío");
+    t.remove();
+    burbuja(limpiar(txt), "bot");
+    historial.push({ role: "model", parts: [{ text: txt }] });
+    persistir();
+  } catch (e) {
+    t.remove();
+    const d = burbuja(CHAT.errorTxt, "err");
+    const b = document.createElement("button"); b.type = "button"; b.textContent = CHAT.reintentar;
+    b.onclick = () => { d.remove(); responder(); };
+    d.append(document.createElement("br"), b);
+  } finally { send.disabled = false; q.focus(); }
+}
+
+document.getElementById("f").addEventListener("submit", e => { e.preventDefault(); const v = q.value; q.value = ""; q.style.height = "auto"; preguntar(v); });
+q.addEventListener("keydown", e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); document.getElementById("f").requestSubmit(); } });
+q.addEventListener("input", () => { q.style.height = "auto"; q.style.height = Math.min(q.scrollHeight, 140) + "px"; });
+</script>
+</body>
+</html>
